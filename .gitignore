@@ -1,4 +1,3 @@
 *.json
 .env
 .envrc
-/node_modules/

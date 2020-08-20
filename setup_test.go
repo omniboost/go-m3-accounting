@@ -1,35 +1,34 @@
-package sage_test
+package m3_test
 
 import (
 	"log"
 	"net/url"
 	"os"
-	"strconv"
 	"testing"
 
-	sage "github.com/omniboost/go-sageone-za"
+	"github.com/omniboost/go-m3-accounting"
 )
 
 var (
-	client    *sage.Client
-	companyID int
+	client            *m3.Client
+	customerShortName string
+	propertyCode      string
+	sourceSystem      string
 )
 
 func TestMain(m *testing.M) {
 	var err error
 
-	baseURLString := os.Getenv("BASE_URL")
-	user := os.Getenv("USER")
-	password := os.Getenv("PASSWORD")
-	apiKey := os.Getenv("API_KEY")
-	debug := os.Getenv("DEBUG")
-	id := os.Getenv("TEST_COMPANY_ID")
-	companyID, err = strconv.Atoi(id)
-	if err != nil {
-		log.Fatal(err)
-	}
+	customerShortName = os.Getenv("CUSTOMER_SHORT_NAME")
+	propertyCode = os.Getenv("PROPERTY_CODE")
+	sourceSystem = os.Getenv("SOURCE_SYSTEM")
 
-	client = sage.NewClient(nil, user, password, apiKey)
+	baseURLString := os.Getenv("BASE_URL")
+	clientID := os.Getenv("CLIENT_ID")
+	clientSecret := os.Getenv("CLIENT_SECRET")
+	debug := os.Getenv("DEBUG")
+
+	client = m3.NewClient(nil, clientID, clientSecret)
 	if debug != "" {
 		client.SetDebug(true)
 	}

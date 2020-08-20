@@ -1,4 +1,4 @@
-package sage
+package m3
 
 import (
 	"bytes"
@@ -17,12 +17,12 @@ import (
 	"text/template"
 
 	ntlmssp "github.com/Azure/go-ntlmssp"
-	"github.com/omniboost/go-sageone-za/utils"
+	"github.com/omniboost/go-m3-accounting/utils"
 )
 
 const (
 	libraryVersion = "0.0.1"
-	userAgent      = "go-sageone-za/" + libraryVersion
+	userAgent      = "go-m3-accounting/" + libraryVersion
 	mediaType      = "application/json"
 	charset        = "utf-8"
 )
@@ -30,13 +30,13 @@ const (
 var (
 	BaseURL = url.URL{
 		Scheme: "https",
-		Host:   "accounting.sageone.co.za",
-		Path:   "/api/2.0.0/",
+		Host:   "intg.m3as.com",
+		Path:   "/api/v1/",
 	}
 )
 
 // NewClient returns a new Exact Globe Client client
-func NewClient(httpClient *http.Client, user, password, apiKey string) *Client {
+func NewClient(httpClient *http.Client, clientID, clientSecret string) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -44,9 +44,8 @@ func NewClient(httpClient *http.Client, user, password, apiKey string) *Client {
 	client := &Client{}
 
 	client.SetHTTPClient(httpClient)
-	client.SetUser(user)
-	client.SetPassword(password)
-	client.SetAPIKey(apiKey)
+	client.SetClientID(clientID)
+	client.SetClientSecret(clientSecret)
 	client.SetBaseURL(BaseURL)
 	client.SetDebug(false)
 	client.SetUserAgent(userAgent)
@@ -65,9 +64,8 @@ type Client struct {
 	baseURL url.URL
 
 	// credentials
-	user     string
-	password string
-	apiKey   string
+	clientID     string
+	clientSecret string
 
 	// User agent for client
 	userAgent string
@@ -100,28 +98,20 @@ func (c *Client) SetDebug(debug bool) {
 	c.debug = debug
 }
 
-func (c Client) User() string {
-	return c.user
+func (c Client) ClientID() string {
+	return c.clientID
 }
 
-func (c *Client) SetUser(user string) {
-	c.user = user
+func (c *Client) SetClientID(clientID string) {
+	c.clientID = clientID
 }
 
-func (c Client) Password() string {
-	return c.password
+func (c Client) ClientSecret() string {
+	return c.clientSecret
 }
 
-func (c *Client) SetPassword(password string) {
-	c.password = password
-}
-
-func (c Client) APIKey() string {
-	return c.apiKey
-}
-
-func (c *Client) SetAPIKey(apiKey string) {
-	c.apiKey = apiKey
+func (c *Client) SetClientSecret(clientSecret string) {
+	c.clientSecret = clientSecret
 }
 
 func (c Client) BaseURL() url.URL {
@@ -197,7 +187,6 @@ func (c *Client) NewRequest(ctx context.Context, method string, URL url.URL, bod
 	}
 
 	values := url.Values{}
-	values.Add("ApiKey", c.APIKey())
 
 	err = utils.AddURLValuesToRequest(values, req, true)
 	if err != nil {
@@ -213,6 +202,8 @@ func (c *Client) NewRequest(ctx context.Context, method string, URL url.URL, bod
 	req.Header.Add("Content-Type", fmt.Sprintf("%s; charset=%s", c.MediaType(), c.Charset()))
 	req.Header.Add("Accept", c.MediaType())
 	req.Header.Add("User-Agent", c.UserAgent())
+	req.Header.Add("Client-Id", c.ClientID())
+	req.Header.Add("Client-Secret", c.ClientSecret())
 
 	return req, nil
 }
@@ -221,8 +212,6 @@ func (c *Client) NewRequest(ctx context.Context, method string, URL url.URL, bod
 // pointed to by v, or returned as an error if an Client error has occurred. If v implements the io.Writer interface,
 // the raw response will be written to v, without attempting to decode it.
 func (c *Client) Do(req *http.Request, responseBody interface{}) (*http.Response, error) {
-	req.SetBasicAuth(c.user, c.password)
-
 	if c.debug == true {
 		dump, _ := httputil.DumpRequestOut(req, true)
 		log.Println(string(dump))

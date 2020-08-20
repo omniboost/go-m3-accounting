@@ -1,4 +1,4 @@
-package sage
+package m3
 
 import (
 	"encoding/json"
